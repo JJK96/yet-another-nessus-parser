@@ -1,10 +1,16 @@
-<h3>Project description</h3>
+### Project description
 
 Yet Another Nessus Parser (YANP) is a parser ables to extract information from Tenable Nessus's .nessus file format. The main tool's objective is to export vulnerability assessment reports in a parsable way. The user is able to choose an appropriate  output format in order to save the Nessus' reports following various advanced needs.
 
 YANP supports all latest features introduced by Nessus v5 release.
 
-<h3>Features</h3>
+### Install
+
+```
+pip install .
+```
+
+### Features
 
 In order to help penetration testers, the following features are supported:
 
@@ -20,7 +26,7 @@ Print a list of targets vulnerable at specified Nessus PluginID.
 Print a list of targets vulnerable at specified Nessus Plugin name.
 Print parsed information in raw mode (for advanced purposes).
 
-<h3>Dependencies</h3>
+### Dependencies
 
 Python netaddr
 
@@ -28,6 +34,6 @@ Python ArgumentParser
 
 Python Minidom
 
-<h3>About</h3>
+### About
 
 Developed by Alessandro Di Pinto
