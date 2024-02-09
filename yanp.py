@@ -448,6 +448,24 @@ class nessus_parser:
             else:
                 print("%s %s" % (host, self._results[host][0]['hostname']))
 
+    def print_http(self):
+        http_servers = set()
+        tls_servers = set()
+        for ip, vulns in self._results.items():
+            for vuln in vulns:
+                if 'plugin_name' in vuln and vuln['plugin_name'] == 'Service Detection' and vuln['service_name'] == 'www':
+                    http_servers.add(f"{ip}:{vuln['port']}")
+                if 'plugin_name' in vuln and vuln['plugin_name'] == 'SSL / TLS Versions Supported':
+                    tls_servers.add(f"{ip}:{vuln['port']}")
+        for res in http_servers:
+            protocol = "https" if res in tls_servers else "http"
+            print(f"{protocol}://{res}")
+
+    def print_json(self):
+        import json
+        import sys
+        json.dump(self._results, sys.stdout)
+
     def print_org_format(self, cvss_min='4.0', cvss_max='10.0'):
         """
         Print to standard output extracted information in '.org' format (Emacs)
@@ -536,14 +554,15 @@ class nessus_parser:
         
         if not filename.endswith('.csv'):
             filename += '.csv'
-        writer = csv.writer(open(filename, 'wb'), delimiter=delim)
+        writer = csv.writer(open(filename, 'w'), delimiter=delim)
         # Print CVS header
         writer.writerow([
             "ID",
             "IP",
             "HOSTNAME",
             "OPERATING SYSTEM",
-            "PORT", "PROTOCOL",
+            "PORT",
+            "PROTOCOL",
             "VULNERABILITY NAME",
             "VULNERABILITY DESCRIPTION",
             "REMEDIATION",
@@ -607,7 +626,7 @@ class nessus_parser:
                         # CVE
                         info.append(vuln['cve'])
 
-                        writer.writerow([item.encode("utf-8") if isinstance(item, str) else item for item in info])
+                        writer.writerow([item for item in info])
                         counter_vulns += 1
                         counter_id += 1
                         info[0] = counter_id
@@ -672,6 +691,9 @@ if __name__ == "__main__":
                          default=False,
                          help="Print a list of targets parsed.",
                          )
+    cmdline.add_argument("--http",
+                         action="store_true",
+                         help="Print all web servers")
     cmdline.add_argument("-s",
                          action="store_true",
                          default=False,
@@ -690,12 +712,15 @@ if __name__ == "__main__":
                          default=False,
                          help="Print parsed information in raw mode (debug).",
                          )
+    cmdline.add_argument("--json",
+                         action="store_true",
+                         help="Output as JSON")
 
     # Parse arguments provided
     args = cmdline.parse_args()
     
     # If not operation required, exit.
-    if not args.org and not args.t and not args.raw and not args.p and not args.d and not args.s and not args.csv:
+    if not args.org and not args.t and not args.raw and not args.p and not args.d and not args.s and not args.csv and not args.http and not args.json:
         print("[!] No operation specified!")
         print("")
         # Show help
@@ -720,12 +745,18 @@ if __name__ == "__main__":
     # Print targets
     if args.t:
         parser.print_targets()
+    # Print http servers
+    if args.http:
+        parser.print_http()
     # Print statistics
     if args.s:
         parser.print_statistics()
     # Print in raw format
     if args.raw:
         parser.print_raw()
+    # Print as JSON
+    if args.json:
+        parser.print_json()
 
     # Exit successfully
     exit(0)
